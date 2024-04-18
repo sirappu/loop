@@ -1,0 +1,22 @@
+SELECT DISTINCT o.owner_name, i.item_name
+FROM owners o
+JOIN items i ON o.owner_id = i.owner_id;
+
+SELECT b.buyer_name
+FROM bids b
+WHERE b.bid_amount = (SELECT MAX(bid_amount) FROM bids);
+
+SELECT b.buyer_name
+FROM bids b
+GROUP BY b.buyer_name
+HAVING COUNT(b.bid_id) > 2;
+
+SELECT o.owner_name
+FROM owners o
+LEFT JOIN items i ON o.owner_id = i.owner_id
+WHERE i.item_id IS NULL;
+
+SELECT b.buyer_id, b.buyer_name, COUNT(b.bid_id) AS num_bids
+FROM buyers b
+LEFT JOIN bids bd ON b.buyer_id = bd.buyer_id
+GROUP BY b.buyer_id, b.buyer_name;
