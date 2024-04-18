@@ -1,22 +1,36 @@
-SELECT DISTINCT o.owner_name, i.item_name
-FROM owners o
-JOIN items i ON o.owner_id = i.owner_id;
+-- Create ITEMS table
+CREATE TABLE ITEMS (
+    iid NUMBER CONSTRAINT pk_items_iid PRIMARY KEY,
+    oid NUMBER CONSTRAINT fk_items_oid REFERENCES OWNERS(oid),
+    name VARCHAR2(255) CONSTRAINT ck_items_name CHECK (REGEXP_LIKE(name, '^[A-Z][a-zA-Z]*$') AND name NOT LIKE '%[^a-zA-Z]%')
+);
 
-SELECT b.buyer_name
-FROM bids b
-WHERE b.bid_amount = (SELECT MAX(bid_amount) FROM bids);
+-- Create BUYERS table
+CREATE TABLE BUYERS (
+    buyid VARCHAR2(3) CONSTRAINT pk_buyers_buyid PRIMARY KEY CHECK (buyid LIKE 'B%' AND LENGTH(buyid) <= 3),
+    name VARCHAR2(8) CONSTRAINT ck_buyers_name CHECK (REGEXP_LIKE(name, '^[a-z]+$')),
+    phone VARCHAR2(20)
+);
 
-SELECT b.buyer_name
-FROM bids b
-GROUP BY b.buyer_name
-HAVING COUNT(b.bid_id) > 2;
+-- Create OWNERS table
+CREATE TABLE OWNERS (
+    oid VARCHAR2(2) CONSTRAINT pk_owners_oid PRIMARY KEY CHECK (oid LIKE 'O%'),
+    name VARCHAR2(8),
+    location VARCHAR2(20) CONSTRAINT ck_owners_location CHECK (location IN ('cbe', 'chennai', 'trichy', 'madurai'))
+);
 
-SELECT o.owner_name
-FROM owners o
-LEFT JOIN items i ON o.owner_id = i.owner_id
-WHERE i.item_id IS NULL;
+-- Create BIDS table
+CREATE TABLE BIDS (
+    bids VARCHAR2(255) CONSTRAINT pk_bids_bids PRIMARY KEY CHECK (bids LIKE 'BID%'),
+    iid NUMBER CONSTRAINT fk_bids_iid REFERENCES ITEMS(iid),
+    buyid VARCHAR2(3) CONSTRAINT fk_bids_buyid REFERENCES BUYERS(buyid),
+    amount NUMBER(10,2) CONSTRAINT ck_bids_amount CHECK (amount >= 0),
+    date DATE CONSTRAINT ck_bids_date CHECK (REGEXP_LIKE(date, '^\d{2}/\d{2}/\d{4}$'))
+);
 
-SELECT b.buyer_id, b.buyer_name, COUNT(b.bid_id) AS num_bids
-FROM buyers b
-LEFT JOIN bids bd ON b.buyer_id = bd.buyer_id
-GROUP BY b.buyer_id, b.buyer_name;
+
+-- Inserting data into ITEMS table
+INSERT INTO ITEMS (iid, oid, name) VALUES (1101, 0501, 'Pen');
+INSERT INTO ITEMS (iid, oid, name) VALUES (1102, 0502, 'Pencil');
+INSERT INTO ITEMS (iid, oid, name) VALUES (1103, 0502, 'Eraser');
+INSERT INTO ITEMS (iid, oid, name) VALUES (1104, 0503, 'Ball');
