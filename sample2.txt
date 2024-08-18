@@ -1,0 +1,50 @@
+#graffee
+import sympy
+import numpy
+import matplotlib.pyplot as plt
+
+def function(root, eq):
+    return eq.subs(x, root)
+
+x, y = sympy.symbols('x y')
+eqn = sympy.sympify(input("Enter the equation:"))
+expression = eqn
+coefficients = [eqn.coeff(x, i) for i in range(int(sympy.degree(eqn)) + 1)]
+n = len(coefficients) - 1
+oldroot = []
+k = 0
+
+while True:
+    root = []
+    k += 1
+    oddpow = "+".join(str(coefficients[i]) + '*x**' + str(i) for i in range(n + 1) if (i % 2 != 0))
+    evenpow = "+".join(str(coefficients[i]) + '*x**' + str(i) for i in range(n + 1) if (i % 2 == 0))
+    exp = sympy.Poly(sympy.sympify(evenpow) ** 2 - sympy.sympify(oddpow) ** 2)
+    exp = exp.subs(x**2, -x)
+    eqn = exp
+    coefficients = [eqn.coeff(x, i) for i in range(int(sympy.degree(eqn)) + 1)]
+    n = len(coefficients) - 1
+    for i in range(n):
+        root.append(abs(coefficients[n - i - 1] / coefficients[n - i]) ** (1 / (2 ** k)))
+    
+    ch = 0
+    print('Iteration ', k)
+    print(root)
+    if k != 1 and all(abs(root[i] - oldroot[i]) <= 0.01 for i in range(n)):
+        break
+    
+    oldroot = root
+
+final_roots = [root[i] if abs(function(root[i], expression)) <= 0.001 else -root[i] for i in range(n)]
+print('Roots:')
+print(final_roots)
+
+x_val = numpy.linspace(-100, 100, 400)
+y_val = [expression.subs(x, i) for i in x_val]
+plt.plot(x_val, y_val)
+plt.axhline(0, color='black', linewidth=0.5)
+plt.axvline(0, color='black', linewidth=0.5)
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.grid()
+plt.show()
