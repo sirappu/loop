@@ -1,0 +1,110 @@
+import numpy as np
+
+def isSymmetric(A):
+    AT = np.transpose(A)
+    for i in range(order):
+        for j in range(order):
+            if A[i][j] != AT[i][j]:
+                return False
+    return True
+
+if __name__ == '__main__':
+    order = int(input("Enter the dimension of the matrix: "))
+    entries = list(map(float, input("Enter the elements of the matrix (space-separated): ").split()))
+    A = np.array(entries).reshape(order, order)
+    
+    if isSymmetric(A):
+        print('The given matrix is symmetric')
+    else:
+        print('The given matrix is not symmetric')
+-----------------------------------------------------------
+
+import numpy as np
+
+def isOrthogonal(A):
+    mat = np.matmul(A, np.transpose(A))
+    identity = np.eye(order)
+    for i in range(order):
+        for j in range(order):
+            if round(mat[i][j], 2) != identity[i][j]:
+                return False
+    return True
+
+if __name__ == '__main__':
+    order = int(input("Enter the dimension of the matrix: "))
+    entries = list(map(float, input("Enter the elements of the matrix (space-separated): ").split()))
+    A = np.array(entries).reshape(order, order)
+    
+    if isOrthogonal(A):
+        print('The given matrix is orthogonal')
+    else:
+        print('The given matrix is not orthogonal')
+----------------------------------------------------------------------------
+import numpy as np
+import math
+
+def getR(A, order):
+    p, q = 0, 1
+    maximum = abs(A[p][q])
+    
+    for i in range(order):
+        for j in range(i + 1, order):
+            if maximum < abs(A[i][j]):
+                maximum = abs(A[i][j])
+                p, q = i, j
+    
+    if A[p][p] == A[q][q]:
+        theta = np.pi / 4 if A[p][q] > 0 else -np.pi / 4
+    else:
+        theta = 0.5 * np.arctan2(2 * A[p][q], A[p][p] - A[q][q])
+    
+    R = np.eye(order)
+    R[p][q] = -math.sin(theta)
+    R[q][p] = math.sin(theta)
+    R[p][p] = math.cos(theta)
+    R[q][q] = math.cos(theta)
+    
+    return R
+
+def isSymmetric(A, order):
+    AT = np.transpose(A)
+    for i in range(order):
+        for j in range(order):
+            if A[i][j] != AT[i][j]:
+                return False
+    return True
+
+def isDiagonal(D, order):
+    for i in range(order):
+        for j in range(order):
+            if round(D[i][j], 2) != 0 and i != j:
+                return False
+    return True
+
+if __name__ == '__main__':
+    order = int(input("Enter the dimension of the matrix: "))
+    entries = list(map(float, input("Enter the elements of the matrix (space-separated): ").split()))
+    A = np.array(entries).reshape(order, order)
+    
+    eigen_vector = []
+    
+    if isSymmetric(A, order):
+        while True:
+            R = getR(A, order)
+            eigen_vector.append(R)
+            D = np.matmul(np.matmul(np.linalg.inv(R), A), R)
+            
+            if isDiagonal(D, order):
+                print('The eigenvalues are:\n', np.diag(D))
+                break
+            
+            A = D
+        
+        E = np.eye(order)
+        for i in eigen_vector:
+            E = np.matmul(E, i)
+        
+        print('The eigenvectors are:\n', 2 * E)
+    else:
+        print('The given matrix is not symmetric')
+---------------------------------------------------------------
