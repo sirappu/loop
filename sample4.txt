@@ -1,0 +1,234 @@
+import numpy as np
+from numpy import linalg
+import sympy
+import operator as op
+
+def DirectMethod():
+    order = int(input('Enter the order of matrix:'))
+    entries = list(map(int, input().split()))
+    
+    A = np.array(entries).reshape(order, order)
+    I = np.identity(order)
+    lam = sympy.symbols('lam')
+    
+    M = sympy.Matrix(A - (lam * I))
+    characteristic_eqn = M.det()
+    
+    eigen_values = sympy.solve(characteristic_eqn)
+    print('The eigenvalues are\n', eigen_values)
+    
+    eigen_vectors = linalg.eig(A)
+    print('The eigenvectors are\n', eigen_vectors)
+
+# Example usage:
+# DirectMethod()
+-------------------------------------------------------
+import sys
+import numpy as np
+import sympy as sp
+
+class TraceAndDeterminant:
+    def __init__(self, matrix: np.ndarray, dimension: int):
+        self.matrix = matrix
+        self.dimension = dimension
+        self.l = sp.symbols('l')
+        if dimension > 3 or dimension < 2:
+            print('Invalid dimension: dimension must be 2 or 3')
+            sys.exit(-1)
+    
+    def minor(self, matrix: np.ndarray, index: int) -> np.ndarray:
+        return np.delete(np.delete(matrix, 0, axis=0), index, axis=1)
+    
+    def find_determinant(self, matrix: np.ndarray) -> float:
+        if len(matrix) == 2:
+            return matrix[0, 0] * matrix[1, 1] - matrix[0, 1] * matrix[1, 0]
+        return sum(matrix[0, i] * self.find_determinant(self.minor(matrix, i)) * (-1) ** i for i in range(len(matrix[0])))
+    
+    def compute(self):
+        self.trace = np.trace(self.matrix)
+        self.determinant = self.find_determinant(self.matrix)
+        
+        if self.dimension == 2:
+            self.characteristic_equation = self.l ** 2 - self.trace * self.l + self.determinant
+        elif self.dimension == 3:
+            term = (
+                self.matrix[0, 0] * self.matrix[1, 1] +
+                self.matrix[1, 1] * self.matrix[2, 2] +
+                self.matrix[0, 0] * self.matrix[2, 2] -
+                self.matrix[0, 2] * self.matrix[2, 0] -
+                self.matrix[0, 1] * self.matrix[1, 0] -
+                self.matrix[1, 2] * self.matrix[2, 1]
+            )
+            self.characteristic_equation = -self.l ** 3 + self.trace * self.l ** 2 - self.l * term + self.determinant
+        
+        self.eigen_values = sp.solve(self.characteristic_equation, self.l)
+        _, self.eigen_vectors = np.linalg.eig(self.matrix)
+    
+    def display_result(self):
+        print('\nThe Given Matrix:\n\n', self.matrix)
+        print(f'\nThe Trace of the matrix: {self.trace}')
+        print(f'The Determinant of the matrix: {self.determinant}')
+        print(f'The Characteristic Equation: {self.characteristic_equation}')
+        print(f'Eigen values: {self.eigen_values}')
+        print('\nThe Corresponding Eigen Vectors:\n')
+        for i, eigen_value in enumerate(self.eigen_values):
+            print(f'For Eigen value {eigen_value}, the eigen vector {self.eigen_vectors[:, i]}')
+            
+def main():
+    dimension = int(input('Enter the dimension (2 or 3): '))
+    elements = input('Enter the matrix elements (space-separated): ')
+    matrix = np.array(list(map(float, elements.split()))).reshape([dimension, dimension])
+    t = TraceAndDeterminant(matrix, dimension)
+    t.compute()
+    t.display_result()
+
+if __name__ == '__main__':
+    main()
+---------------------------------------------------------------------------------
+import numpy as np
+import operator as op
+
+def PowerMethod():
+    order = int(input('Enter the order of matrix: '))
+    tolerance = float(input('Enter the tolerance value: '))
+    
+    entries = list(map(int, input('Enter the matrix elements (space-separated): ').split()))
+    A = np.array(entries).reshape(order, order)
+    
+    X = np.ones([order, 1])  # Initial guess vector
+    lambda_old = 1
+    lambda_new = 1
+    flag = 1
+    
+    while flag == 1 or abs(lambda_old - lambda_new) > tolerance:
+        flag = 0
+        lambda_old = lambda_new
+        
+        X_new = np.matmul(A, X)
+        lambda_new = float(max(X_new))  # Dominant eigenvalue approximation
+        
+        X = X_new / lambda_new  # Normalize the vector
+        
+        # Check for the applicability of the method
+        if op.countOf(X, lambda_new) != 1:
+            print('The method is not applicable as there is no dominant eigenvalue.')
+            return
+    
+    print('X:', X)
+    print('Lambda New:', lambda_new)
+    print('The largest eigenvalue is:', lambda_new)
+    print('The corresponding eigenvector is:', X)
+
+# Example usage:
+# PowerMethod()
+------------------------------------------------------------
+import numpy as np
+import sympy as sp
+import math
+
+def convert_to_matrix(equation, variables):
+    variables_matrix = sp.Matrix(variables)
+    matrix = np.array(sp.hessian(equation, variables_matrix)) / 2
+    print('\nThe Given Matrix:\n\n', matrix)
+    return matrix
+
+def format_output(iteration, eigen_value, eigen_vector, tolerance):
+    digits = int(math.log10(1 / tolerance))
+    rounded_eigen_value = round(float(eigen_value), digits)
+    rounded_eigen_vector = np.round(eigen_vector.astype(float), digits)
+    print(f'\t{iteration:9d} \t{rounded_eigen_value:{14 - digits}.{digits}f}{" " * digits}\t{rounded_eigen_vector}')
+    return rounded_eigen_value, rounded_eigen_vector
+
+def power_method(matrix, dimension, tolerance):
+    x = np.ones([dimension, 1]).reshape([1, -1])[0]
+    current_eigen = 1
+    print('\n\tIteration \tEigen Value \tEigen Vector\n')
+    iteration = 0
+    format_output(iteration, current_eigen, x, tolerance)
+    
+    while True:
+        iteration += 1
+        temp = np.matmul(matrix, x)
+        eigen = temp[np.where(np.abs(temp) == np.max(np.abs(temp)))[0][0]]
+        eigen, temp = format_output(iteration, eigen, temp, tolerance)
+        
+        if len(np.where(temp == float(eigen))[0]) != 1:
+            print(f'\nThe Method is not applicable as there is no dominant eigenvalue')
+            return
+        
+        x = temp / eigen
+        
+        if abs(abs(eigen) - current_eigen) < tolerance:
+            break
+        
+        current_eigen = eigen
+    
+    print(f'\nFinal Eigen Value: {current_eigen}\nFinal Eigen Vector: {x}\n')
+
+def main():
+    dimension = int(input('Enter the number of independent variables: '))
+    equation = sp.sympify(input('Enter the equation: '))
+    variables = [f'x{i + 1}' for i in range(dimension)]
+    tolerance = 0.001
+    matrix = convert_to_matrix(equation, variables)
+    power_method(matrix, dimension, tolerance)
+
+if __name__ == '__main__':
+    main()
+-----------------------------------------------------
+import numpy as np
+from numpy import linalg
+import operator as op
+
+def cofactor(A, row, col, order):
+    temp = []
+    for i in range(order):
+        for j in range(order):
+            if i != row and j != col:
+                temp.append(A[i][j])
+    return linalg.det(np.array(temp).reshape(order - 1, order - 1))
+
+def InversePowerMethod():
+    order = int(input('Enter the order of matrix: '))
+    tolerance = float(input('Enter the tolerance value: '))
+    entries = list(map(float, input('Enter the matrix elements (space-separated): ').split()))
+    
+    A = np.array(entries).reshape(order, order)
+    
+    if linalg.det(A) != 0:
+        adj_A = np.zeros([order, order])
+        for i in range(order):
+            for j in range(order):
+                sign = 1 if (i + j) % 2 == 0 else -1
+                adj_A[j][i] = sign * cofactor(A, i, j, order)
+        
+        A = adj_A / linalg.det(A)
+    else:
+        print('Inverse does not exist')
+        return
+    
+    X = np.ones([order, 1])
+    lambda_old = 1
+    lambda_new = 1
+    flag = 1
+    
+    while flag == 1 or abs(lambda_old - lambda_new) > tolerance:
+        flag = 0
+        lambda_old = lambda_new
+        X_new = np.matmul(A, X)
+        lambda_new = float(max(X_new))
+        X = X_new / lambda_new
+        
+        if op.countOf(X, lambda_new) != 1:
+            print('X:', X)
+            print('The method is not applicable as there is no dominant eigenvalue')
+            return
+    
+    print('X:', X)
+    print('Lambda New:', lambda_new)
+    print('The smallest eigenvalue is:', lambda_new)
+    print('The corresponding eigenvector is:', X)
+
+# Example usage:
+# InversePowerMethod()
+-------------------------------------------------------------------------------
