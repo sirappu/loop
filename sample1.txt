@@ -154,4 +154,66 @@ plt.ylabel('f(x)')
 plt.grid()
 plt.show()
 -----------------------------------------------------------
+#1.Gauss Jacobi
+import sympy
+
+def gauss_jacobi_method():
+    num_equations = int(input('Enter number of equations: '))
+    num_unknowns = int(input('Enter number of unknowns: '))
+
+    symbols = [sympy.symbols(f'x{i+1}') for i in range(num_unknowns)]
+
+    dominant_indices = []
+    equations_modifications = []
+
+    for i in range(num_equations):
+        equation_input = input('Enter the equation: ')
+
+        lhs, rhs = equation_input.split('=')
+        lhs = sympy.sympify(lhs)
+        rhs = sympy.sympify(rhs)
+        equation = lhs - rhs
+    
+        coefficients = [abs(lhs.coeff(symbols[j])) for j in range(num_unknowns)]
+        dominant_index = coefficients.index(max(coefficients))
+        dominant_indices.append(dominant_index)
+
+        if (sum(coefficients) - coefficients[dominant_index]) > coefficients[dominant_index]:
+            print('Not diagonally dominant')
+            return
+
+        modification = sympy.solve(equation, symbols[dominant_index])
+        equations_modifications.append(modification[0])
+  
+    if len(set(dominant_indices)) != num_unknowns:
+        print('Not strictly diagonally dominant')
+        return
+
+    #print(' ' * 10, end='')
+    for i in range(num_unknowns):
+        print(f'x{i+1}'.ljust(10), end='')
+    print()
+
+    current_values = [0] * num_unknowns
+    new_values = [0] * num_unknowns
+
+    while True:
+        for i in range(num_unknowns):
+            temp_value = equations_modifications[dominant_indices.index(i)]
+            for j in range(num_unknowns):
+                temp_value = temp_value.subs(symbols[j], current_values[j])
+            new_values[i] = temp_value
+
+        print(' '.join(f'{val:.4f}' for val in current_values))
+
+        if all(abs(current_values[i] - float(new_values[i])) < 0.0001 for i in range(num_unknowns)):
+            break
+
+        current_values = [float(val) for val in new_values]
+
+    print(' '.join(f'{val:.4f}' for val in current_values))
+
+
+gauss_jacobi_method()
+-------------------------------------------------------------------------------
 
