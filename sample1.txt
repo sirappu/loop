@@ -216,4 +216,72 @@ def gauss_jacobi_method():
 
 gauss_jacobi_method()
 -------------------------------------------------------------------------------
+import sympy
+
+def GaussSeidelMethod():
+    no_of_equations = int(input('Enter number of equations: '))
+    no_of_unknowns = int(input('Enter the number of unknowns: '))
+    
+    # Initialize symbols
+    x = [sympy.symbols(f'x{i+1}') for i in range(no_of_unknowns)]
+    
+    dominant = []
+    y = []
+    
+    for i in range(no_of_equations):
+        eqn = input(f'Enter equation {i+1}: ')
+        eq = sympy.sympify(eqn.split('=')[0])
+        
+        # Get the coefficients of the unknowns in the equation
+        coefficients = [abs(eq.coeff(var)) for var in x]
+        dominant.append(coefficients.index(max(coefficients)))
+        
+        if (sum(coefficients) - coefficients[dominant[i]]) < coefficients[dominant[i]]:
+            print('Not Strictly Diagonally Dominant')
+            return
+        
+        # Rearrange the equation to solve for the dominant variable
+        eqn = eqn.split('=')[0] + '-' + eqn.split('=')[1]
+        eqn = sympy.sympify(eqn)
+        y.append(sympy.solve(eqn, x[dominant[i]]))
+    
+    # Check if diagonal dominance is strictly met
+    if len(set(dominant)) != len(dominant):
+        print('Not Strictly Diagonally Dominant')
+        return
+    
+    # Initialize variables
+    print('Variables:')
+    for i in range(no_of_unknowns):
+        print(f'x{i+1}', end=' ')
+    print()
+    
+    val = [0] * no_of_unknowns
+    t = [0] * no_of_unknowns
+    
+    print('Initial guess:')
+    print(val)
+    
+    # Iterate until convergence
+    while True:
+        for i in range(no_of_unknowns):
+            temp = y[dominant.index(i)][0]
+            for j in range(no_of_unknowns):
+                temp = temp.subs(x[j], val[j])
+            val[i] = float(temp)
+        
+        print('Updated values:')
+        print(val)
+        
+        if all(abs(val[i] - t[i]) < 0.0001 for i in range(no_of_unknowns)):
+            break
+        
+        t = val.copy()
+    
+    print('Converged values:')
+    print(val)
+
+# Example usage:
+# GaussSeidelMethod()
+---------------------------------
 
