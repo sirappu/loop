@@ -106,3 +106,80 @@ def GaussJordanEliminationInverse():
 if __name__ == '__main__':
     GaussJordanEliminationInverse()
 --------------------------------------------------------------------------------------------
+
+import numpy as np
+
+def setMatrixTolerance(matrix, tolerance=0.00001):
+    matrix = np.round(matrix, 5)
+    return np.where(np.abs(matrix) <= tolerance, 0, matrix)
+
+def GaussJordanElimination():
+    no_of_equations = int(input('Enter the number of equations: '))
+    no_of_unknowns = int(input('Enter the number of unknowns: '))
+    
+    elements = input('Enter the augmented matrix elements (space-separated): ')
+    if elements:
+        try:
+            augmented_matrix = np.array(list(map(float, elements.split())), dtype=float).reshape(no_of_equations, no_of_unknowns + 1)
+        except ValueError:
+            print("Invalid input! Please make sure the number of elements matches the matrix size.")
+            return
+
+    # Perform Gauss-Jordan elimination
+    for i in range(no_of_equations):
+        # Pivot selection
+        pivot_row = i + np.argmax(np.abs(augmented_matrix[i:, i]))
+        if augmented_matrix[pivot_row, i] == 0:
+            continue  # Skip if no pivot found (all elements in column are zero)
+        augmented_matrix[[i, pivot_row]] = augmented_matrix[[pivot_row, i]]  # Swap rows
+
+        # Normalize pivot row
+        augmented_matrix[i, :] = augmented_matrix[i, :] / augmented_matrix[i, i]
+
+        # Eliminate other rows
+        for j in range(no_of_equations):
+            if i != j:
+                augmented_matrix[j, :] = augmented_matrix[j, :] - augmented_matrix[i, :] * augmented_matrix[j, i]
+
+        augmented_matrix = setMatrixTolerance(augmented_matrix)
+
+    print('\nThe RREF Matrix:\n', augmented_matrix)
+
+    # Separate matrix A and vector B
+    A = augmented_matrix[:, :-1]
+    B = augmented_matrix[:, -1]
+
+    # Calculate ranks
+    rank_A = np.linalg.matrix_rank(A)
+    rank_augmented = np.linalg.matrix_rank(augmented_matrix)
+
+    print(f'\nRank of A: {rank_A}')
+    print(f'Rank of [A : B]: {rank_augmented}')
+
+    if rank_A != rank_augmented:
+        print("No solution")
+    elif rank_A == rank_augmented == no_of_unknowns:
+        print("Unique solution:")
+        print(f'Solution: {B}')
+    else:
+        print("Infinite solutions")
+        # Identify free variables and express the solutions in parametric form
+        free_variables = []
+        solution_set = []
+        for i in range(no_of_unknowns):
+            if np.all(A[:, i] == 0):
+                free_variables.append(f'x{i + 1}')
+                solution_set.append(f'x{i + 1}')
+            else:
+                solution_set.append(f'{B[i]:.2f}')
+        
+        for i, var in enumerate(free_variables):
+            print(f'{var} is a free variable')
+        
+        print('Solution set:')
+        for i, sol in enumerate(solution_set):
+            print(f'x{i + 1} = {sol}')
+    
+if __name__ == '__main__':
+    GaussJordanElimination()
+------------------------------------------------------------
